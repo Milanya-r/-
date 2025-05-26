@@ -473,6 +473,9 @@
             const categoriesList = document.getElementById('categoriesList');
             try {
                 const response = await fetch(`${BACKEND_URL}/api/categories`);
+                if (!response.ok) { // Проверяем статус ответа
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const { categories: fetchedCategories } = await response.json();
 
                 fetchedCategories.forEach(cat => {
@@ -501,11 +504,19 @@
                     }
                     categoriesList.appendChild(categoryItem);
                 });
-            }
-            catch (error) {
+                // Убираем сообщение об ошибке, если категории успешно загрузились
+                document.getElementById('categoryLoadError')?.remove(); 
+
+            } catch (error) {
                 console.error('Ошибка загрузки категорий:', error);
-                // Более дружелюбное сообщение, если категории не загрузились
-                categoriesList.innerHTML = '<p class="text-red-500">Не удалось загрузить категории. Пожалуйста, проверьте ваше интернет-соединение или попробуйте позже.</p>';
+                // Добавляем сообщение об ошибке только если его еще нет
+                if (!document.getElementById('categoryLoadError')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.id = 'categoryLoadError';
+                    errorDiv.className = 'text-red-500 text-center mb-4';
+                    errorDiv.textContent = 'Не удалось загрузить категории. Пожалуйста, убедитесь, что бэкенд запущен и доступен.';
+                    categoriesList.before(errorDiv); // Вставляем перед списком категорий
+                }
             }
 
 
@@ -606,6 +617,7 @@
 
             } catch (error) {
                 console.error('Ошибка загрузки заданий или категорий:', error);
+                // Это сообщение будет показано только если бэкенд действительно недоступен
                 showModal('Ошибка', 'Не удалось загрузить данные. Пожалуйста, убедитесь, что бэкенд запущен.');
                 return false;
             } finally {
