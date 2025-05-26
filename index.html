@@ -207,7 +207,7 @@
 
     <script>
         // URL вашего бэкенда. ОБЯЗАТЕЛЬНО ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ ДОМЕН С HTTPS!
-        const BACKEND_URL = 'https://mygameapi.ru'; // <-- ОБНОВИТЕ ЭТУ СТРОКУ!
+        const BACKEND_URL = 'https://mygameapi.ru'; 
 
         // Инициализация Telegram Web App
         if (window.Telegram && window.Telegram.WebApp) {
@@ -456,6 +456,9 @@
         }
 
         async function renderCategorySelection() {
+            // Перед рендерингом категорий, обновим премиум-статус
+            await checkPremiumStatus(); 
+
             const appDiv = document.getElementById('app');
             appDiv.innerHTML = `
                 <h2 class="text-2xl font-bold mb-4 text-purple-700">Выберите категории заданий</h2>
@@ -602,12 +605,41 @@
 
             } catch (error) {
                 console.error('Ошибка загрузки заданий или категорий:', error);
-                showModal('Ошибка', 'Не удалось загрузить данные. Пожалуйста, убедитесь, что бэкенд запущен и попробуйте позже.');
+                showModal('Ошибка', 'Не удалось загрузить данные. Пожалуйста, убедитесь, что бэкенд запущен.');
                 return false;
             } finally {
                 if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
                     window.Telegram.WebApp.MainButton.hideProgress();
                 }
+            }
+        }
+
+        // Новая функция для проверки премиум-статуса пользователя
+        async function checkPremiumStatus() {
+            const userId = window.Telegram.WebApp.initDataUnsafe.user?.id;
+            if (!userId) {
+                console.warn('User ID not available for premium status check.');
+                premiumStatus = false;
+                localStorage.setItem('premiumStatus', 'false');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/users/${userId}/premium`);
+                if (response.ok) {
+                    const data = await response.json();
+                    premiumStatus = data.premium;
+                    localStorage.setItem('premiumStatus', premiumStatus.toString()); // Сохраняем актуальный статус
+                    console.log(`Premium status for user ${userId}: ${premiumStatus}`);
+                } else {
+                    console.error('Failed to fetch premium status:', response.status);
+                    premiumStatus = false;
+                    localStorage.setItem('premiumStatus', 'false');
+                }
+            } catch (error) {
+                console.error('Error checking premium status:', error);
+                premiumStatus = false;
+                localStorage.setItem('premiumStatus', 'false');
             }
         }
 
@@ -813,7 +845,8 @@
             // Проверяем статус подтверждения возраста
             const ageConfirmed = localStorage.getItem('ageConfirmed') === 'true';
             if (ageConfirmed) {
-                premiumStatus = localStorage.getItem('premiumStatus') === 'true';
+                // Если возраст подтвержден, сразу проверяем премиум-статус с бэкенда
+                await checkPremiumStatus(); 
                 renderPage('welcome');
             } else {
                 renderPage('ageGate');
