@@ -206,8 +206,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <script>
-        // URL вашего бэкенда. В реальном приложении замените на свой домен.
-        const BACKEND_URL = 'http://localhost:3000'; // Замените на ваш реальный URL бэкенда
+        // URL вашего бэкенда. ОБЯЗАТЕЛЬНО ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ ДОМЕН С HTTPS!
+        const BACKEND_URL = 'https://mygameapi.ru'; // <-- ОБНОВИТЕ ЭТУ СТРОКУ!
 
         // Инициализация Telegram Web App
         if (window.Telegram && window.Telegram.WebApp) {
@@ -423,4 +423,402 @@
             document.getElementById('startGameBtn').addEventListener('click', () => renderPage('gameModeSelection'));
             document.getElementById('settingsBtn').addEventListener('click', () => renderPage('settings'));
 
-            i
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                window.Telegram.WebApp.MainButton.hide(); // На этом экране главная кнопка не нужна
+            }
+        }
+
+        function renderGameModeSelection() {
+            const appDiv = document.getElementById('app');
+            appDiv.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4 text-purple-700">Выберите режим игры</h2>
+                <p class="text-gray-600 mb-6">Как вы хотите играть?</p>
+                <button id="userChoiceModeBtn" class="btn ${gameMode === 'userChoice' ? 'btn-primary' : 'btn-secondary'} w-full mb-3">
+                    Наш Выбор (Вы сами выбираете "Правду" или "Действие")
+                </button>
+                <button id="randomModeBtn" class="btn ${gameMode === 'random' ? 'btn-primary' : 'btn-secondary'} w-full mb-6">
+                    Сюрприз (Приложение выбирает случайным образом)
+                </button>
+                <button id="confirmModeBtn" class="btn btn-green w-full">Продолжить</button>
+                <button id="backFromGameModeBtn" class="btn btn-secondary w-full mt-4">Назад</button>
+            `;
+
+            document.getElementById('userChoiceModeBtn').addEventListener('click', () => {
+                gameMode = 'userChoice';
+                renderGameModeSelection(); // Перерисовываем для обновления стилей
+            });
+            document.getElementById('randomModeBtn').addEventListener('click', () => {
+                gameMode = 'random';
+                renderGameModeSelection(); // Перерисовываем для обновления стилей
+            });
+            document.getElementById('confirmModeBtn').addEventListener('click', () => renderPage('categorySelection'));
+            document.getElementById('backFromGameModeBtn').addEventListener('click', () => renderPage('welcome'));
+        }
+
+        async function renderCategorySelection() {
+            const appDiv = document.getElementById('app');
+            appDiv.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4 text-purple-700">Выберите категории заданий</h2>
+                <p class="text-gray-600 mb-6">Выберите те, что вам по душе. Платные категории доступны после покупки.</p>
+                <div id="categoriesList" class="flex flex-col gap-3 mb-6">
+                    </div>
+                <button id="startGameFromCategoriesBtn" class="btn btn-green w-full">Начать игру</button>
+                <button id="buyPremiumBtn" class="btn btn-primary w-full mt-3">Купить Премиум / Stars</button>
+                <button id="backFromCategoryBtn" class="btn btn-secondary w-full mt-4">Назад</button>
+            `;
+
+            const categoriesList = document.getElementById('categoriesList');
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/categories`);
+                const { categories: fetchedCategories } = await response.json();
+
+                fetchedCategories.forEach(cat => {
+                    const isSelected = selectedCategories.includes(cat.name);
+                    const isPaid = cat.level === 'paid';
+                    const isDisabled = isPaid && !premiumStatus;
+
+                    const categoryItem = document.createElement('div');
+                    categoryItem.className = `category-item ${isSelected ? 'selected' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`;
+                    categoryItem.innerHTML = `
+                        <div class="text-left">
+                            <p class="font-semibold text-gray-800">${cat.name} ${isPaid ? '<span class="text-yellow-600 text-sm font-bold">🌟 Премиум</span>' : ''}</p>
+                            <p class="text-sm text-gray-500">${cat.description}</p>
+                        </div>
+                        ${isDisabled ? '<span class="text-red-500 text-xl">🔒</span>' : '<input type="checkbox" class="form-checkbox h-5 w-5 text-purple-600 rounded-md" ' + (isSelected ? 'checked' : '') + '>'}
+                    `;
+                    if (!isDisabled) {
+                        categoryItem.addEventListener('click', () => {
+                            if (selectedCategories.includes(cat.name)) {
+                                selectedCategories = selectedCategories.filter(name => name !== cat.name);
+                            } else {
+                                selectedCategories.push(cat.name);
+                            }
+                            renderCategorySelection(); // Перерисовываем для обновления стилей
+                        });
+                    }
+                    categoriesList.appendChild(categoryItem);
+                });
+            }
+            catch (error) {
+                console.error('Ошибка загрузки категорий:', error);
+                categoriesList.innerHTML = '<p class="text-red-500">Не удалось загрузить категории. Пожалуйста, убедитесь, что бэкенд запущен.</p>';
+            }
+
+
+            document.getElementById('startGameFromCategoriesBtn').addEventListener('click', startGame);
+            document.getElementById('buyPremiumBtn').addEventListener('click', showPremiumPurchase);
+            document.getElementById('backFromCategoryBtn').addEventListener('click', () => renderPage('gameModeSelection'));
+
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                window.Telegram.WebApp.MainButton.hide();
+            }
+        }
+
+        function renderGameScreen() {
+            const appDiv = document.getElementById('app');
+            appDiv.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4 text-purple-700">Ваше задание:</h2>
+                <div id="taskCard" class="card mb-6">Нажмите "Следующее задание"</div>
+                <div id="gameControls" class="flex flex-col gap-3">
+                    ${gameMode === 'userChoice' ? `
+                        <div class="flex gap-3">
+                            <button id="chooseTruthBtn" class="btn btn-primary w-1/2">Правда</button>
+                            <button id="chooseDareBtn" class="btn btn-primary w-1/2">Действие</button>
+                        </div>
+                    ` : ''}
+                    <button id="nextTaskBtn" class="btn btn-green w-full">Следующее задание</button>
+                    <button id="skipTaskBtn" class="btn btn-secondary w-full">Пропустить</button>
+                    <button id="backToCategoriesBtn" class="btn btn-secondary w-full mt-4">Сменить категории</button>
+                </div>
+                <div id="adDisplay" class="ad-container hidden"></div>
+            `;
+
+            if (gameMode === 'userChoice') {
+                document.getElementById('chooseTruthBtn').addEventListener('click', () => getNextTask('truth'));
+                document.getElementById('chooseDareBtn').addEventListener('click', () => getNextTask('dare'));
+            }
+            document.getElementById('nextTaskBtn').addEventListener('click', () => getNextTask(gameMode === 'random' ? null : currentTask?.type));
+            document.getElementById('skipTaskBtn').addEventListener('click', skipTask);
+            document.getElementById('backToCategoriesBtn').addEventListener('click', () => renderPage('categorySelection'));
+
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                window.Telegram.WebApp.MainButton.hide();
+            }
+            displayAd(); // Показываем рекламу при загрузке игрового экрана
+        }
+
+        function renderSettings() {
+            const appDiv = document.getElementById('app');
+            // Загружаем безопасные слова из localStorage
+            const storedSafeWords = localStorage.getItem('safeWords');
+            safeWords = storedSafeWords ? JSON.parse(storedSafeWords) : [];
+
+            appDiv.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4 text-purple-700">Настройки</h2>
+                <div class="mb-6 text-left">
+                    <h3 class="text-xl font-semibold mb-3">Безопасные слова / Границы комфорта</h3>
+                    <p class="text-gray-600 mb-2">Введите слова или фразы, которые не должны появляться в заданиях (например, "еда", "публично", "БДСМ"). Разделяйте запятыми.</p>
+                    <input type="text" id="safeWordsInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Например: еда, публично">
+                    <button id="saveSafeWordsBtn" class="btn btn-primary w-full mt-3">Сохранить безопасные слова</button>
+                    <p class="text-sm text-gray-500 mt-2">Текущие безопасные слова: <span id="currentSafeWords">${safeWords.join(', ') || 'Нет'}</span></p>
+                </div>
+                <button id="backToWelcomeBtn" class="btn btn-secondary w-full mt-4">Назад</button>
+            `;
+
+            const safeWordsInput = document.getElementById('safeWordsInput');
+            safeWordsInput.value = safeWords.join(', ');
+
+            document.getElementById('saveSafeWordsBtn').addEventListener('click', () => {
+                const newSafeWords = safeWordsInput.value.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+                safeWords = newSafeWords;
+                localStorage.setItem('safeWords', JSON.stringify(safeWords));
+                document.getElementById('currentSafeWords').textContent = safeWords.join(', ') || 'Нет';
+                showModal('Сохранено', 'Безопасные слова успешно обновлены.');
+            });
+
+            document.getElementById('backToWelcomeBtn').addEventListener('click', () => renderPage('welcome'));
+
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                window.Telegram.WebApp.MainButton.hide();
+            }
+        }
+
+        // --- Логика игры ---
+
+        async function fetchTasksAndCategories() {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                window.Telegram.WebApp.MainButton.showProgress();
+            }
+            try {
+                const tasksResponse = await fetch(`${BACKEND_URL}/api/tasks`);
+                const { tasks: fetchedTasks } = await tasksResponse.json();
+                allTasks = fetchedTasks; // Сохраняем все задания
+
+                const categoriesResponse = await fetch(`${BACKEND_URL}/api/categories`);
+                const { categories: fetchedCategories } = await categoriesResponse.json();
+                // SIMULATED_CATEGORIES = fetchedCategories; // Обновляем категории, если они динамические
+
+                return true;
+
+            } catch (error) {
+                console.error('Ошибка загрузки заданий или категорий:', error);
+                showModal('Ошибка', 'Не удалось загрузить данные. Пожалуйста, убедитесь, что бэкенд запущен и попробуйте позже.');
+                return false;
+            } finally {
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                    window.Telegram.WebApp.MainButton.hideProgress();
+                }
+            }
+        }
+
+        async function startGame() {
+            if (selectedCategories.length === 0) {
+                showModal('Внимание', 'Пожалуйста, выберите хотя бы одну категорию заданий.');
+                return;
+            }
+
+            // Фильтруем задания для текущей сессии
+            availableTasksForSession = allTasks.filter(task => {
+                const isCategorySelected = selectedCategories.includes(task.category);
+                const isPremiumContent = task.level === 'paid';
+                const isAllowedByPremium = !isPremiumContent || premiumStatus;
+                return isCategorySelected && isAllowedByPremium;
+            });
+
+            // Фильтрация по безопасным словам
+            availableTasksForSession = availableTasksForSession.filter(task => {
+                const taskText = task.text.toLowerCase();
+                return !safeWords.some(word => taskText.includes(word));
+            });
+
+            if (availableTasksForSession.length === 0) {
+                showModal('Внимание', 'Нет доступных заданий для выбранных категорий и безопасных слов. Попробуйте выбрать другие категории или изменить настройки безопасных слов.');
+                renderPage('categorySelection'); // Возвращаем на выбор категорий
+                return;
+            }
+
+            playedTasksIdsInSession = []; // Сбрасываем сыгранные задания для новой сессии
+            renderPage('game');
+        }
+
+        function getNextTask(type = null) {
+            const taskCard = document.getElementById('taskCard');
+            taskCard.textContent = 'Загрузка...';
+
+            let filteredTasks = availableTasksForSession.filter(task => !playedTasksIdsInSession.includes(task.id));
+
+            if (type) {
+                filteredTasks = filteredTasks.filter(task => task.type === type);
+            }
+
+            if (filteredTasks.length === 0) {
+                showModal('Конец раунда', 'Вы выполнили все доступные задания в выбранных категориях! Начните новую игру или смените категории.');
+                playedTasksIdsInSession = []; // Сброс для возможности начать заново
+                taskCard.textContent = 'Нажмите "Следующее задание"';
+                currentTask = null;
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * filteredTasks.length);
+            currentTask = filteredTasks[randomIndex];
+
+            taskCard.innerHTML = `<span class="font-bold text-purple-700">${currentTask.type === 'truth' ? 'Правда:' : 'Действие:'}</span> ${currentTask.text}`;
+            playedTasksIdsInSession.push(currentTask.id);
+
+            // Отправка аналитики о выполненном задании (симуляция)
+            sendAnalytics({
+                event: 'task_completed',
+                taskId: currentTask.id,
+                category: currentTask.category,
+                type: currentTask.type,
+                userId: window.Telegram.WebApp.initDataUnsafe.user?.id || 'anonymous'
+            });
+            displayAd(); // Показываем рекламу после каждого задания
+        }
+
+        function skipTask() {
+            if (!currentTask) {
+                showModal('Внимание', 'Сначала получите задание, чтобы его пропустить.');
+                return;
+            }
+            showModal('Задание пропущено', 'Это задание было пропущено. Получите следующее!', [
+                { text: 'ОК', className: 'btn-primary', handler: () => getNextTask(gameMode === 'random' ? null : currentTask?.type) }
+            ]);
+        }
+
+        function showPremiumPurchase() {
+            showModal('Премиум-доступ', `
+                <p class="mb-3">Разблокируйте все категории заданий и дополнительные функции, купив премиум-доступ!</p>
+                <p class="font-bold mt-4 text-xl">Стоимость: 100 Stars</p>
+            `, [
+                { text: 'Купить за 100 Stars (Симуляция)', className: 'btn-primary', handler: simulatePremiumPurchase }
+            ]);
+        }
+
+        async function simulatePremiumPurchase() {
+            // В реальном приложении здесь будет вызов Telegram Web App API для оплаты Stars
+            // window.Telegram.WebApp.openInvoice('invoice_url', (status) => { ... });
+            // А затем серверная валидация и обновление статуса пользователя
+
+            try {
+                const userId = window.Telegram.WebApp.initDataUnsafe.user?.id || 'anonymous';
+                const response = await fetch(`${BACKEND_URL}/api/purchase/stars`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId, amount: 100, item: 'premium_access' })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    premiumStatus = true;
+                    localStorage.setItem('premiumStatus', 'true'); // Сохраняем статус локально
+                    showModal('Поздравляем! 🎉', 'Премиум-доступ активирован! Теперь вам доступны все категории.');
+                    renderPage('categorySelection'); // Перерисовываем, чтобы показать доступные категории
+                    sendAnalytics({
+                        event: 'premium_purchased',
+                        userId: userId
+                    });
+                } else {
+                    showModal('Ошибка покупки', result.message || 'Не удалось активировать премиум-доступ.');
+                }
+            } catch (error) {
+                console.error('Ошибка симуляции покупки:', error);
+                showModal('Ошибка', 'Произошла ошибка при попытке покупки. Попробуйте позже.');
+            }
+        }
+
+        async function sendAnalytics(data) {
+            try {
+                await fetch(`${BACKEND_URL}/api/analytics`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                console.log('Аналитика отправлена:', data);
+            } catch (error) {
+                console.error('Ошибка отправки аналитики:', error);
+            }
+        }
+
+        let adCounter = 0;
+        const AD_INTERVAL = 3; // Показывать рекламу каждые 3 задания
+
+        async function displayAd() {
+            const adDisplayDiv = document.getElementById('adDisplay');
+            adCounter++;
+
+            if (premiumStatus) { // Не показываем рекламу для премиум-пользователей
+                adDisplayDiv.classList.add('hidden');
+                return;
+            }
+
+            if (adCounter % AD_INTERVAL === 0) {
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/ads/current`);
+                    if (response.ok) {
+                        const adData = await response.json();
+                        let mediaHtml = '';
+                        if (adData.type === 'image') {
+                            mediaHtml = `<img src="${adData.url}" alt="Реклама" class="w-full h-auto object-cover">`;
+                        } else if (adData.type === 'video') {
+                            mediaHtml = `<video src="${adData.url}" controls class="w-full h-auto object-cover"></video>`;
+                        }
+
+                        adDisplayDiv.innerHTML = `
+                            <p class="text-sm text-gray-500 mb-2">Реклама</p>
+                            ${mediaHtml}
+                            <a href="${adData.link}" target="_blank" class="btn btn-secondary mt-3">
+                                ${adData.text || 'Подробнее'}
+                            </a>
+                        `;
+                        adDisplayDiv.classList.remove('hidden');
+                    } else {
+                        adDisplayDiv.classList.add('hidden'); // Скрыть, если нет активной рекламы
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки рекламы:', error);
+                    adDisplayDiv.classList.add('hidden');
+                }
+            } else {
+                adDisplayDiv.classList.add('hidden');
+            }
+        }
+
+
+        // --- Главная кнопка Telegram ---
+        function handleMainButtonClick() {
+            // Эта функция вызывается при нажатии на Главную кнопку Telegram
+            // Её поведение зависит от текущей страницы
+            if (currentPage === 'welcome') {
+                renderPage('gameModeSelection');
+            } else if (currentPage === 'gameModeSelection') {
+                renderPage('categorySelection');
+            } else if (currentPage === 'categorySelection') {
+                startGame();
+            } else if (currentPage === 'game') {
+                getNextTask(gameMode === 'random' ? null : currentTask?.type);
+            }
+        }
+
+        // --- Инициализация приложения ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Загружаем все задания и категории с бэкенда при старте
+            const dataLoaded = await fetchTasksAndCategories();
+            if (!dataLoaded) {
+                // Если данные не загрузились, возможно, бэкенд не запущен.
+                // Можно показать сообщение об ошибке или предложить повторить попытку.
+                // Пока оставим на текущей странице (ageGate/welcome), чтобы пользователь мог увидеть ошибку.
+            }
+
+            // Проверяем статус подтверждения возраста
+            const ageConfirmed = localStorage.getItem('ageConfirmed') === 'true';
+            if (ageConfirmed) {
+                premiumStatus = localStorage.getItem('premiumStatus') === 'true';
+                renderPage('welcome');
+            } else {
+                renderPage('ageGate');
+            }
+        });
+    </script>
+</body>
+</html>
