@@ -209,7 +209,53 @@
         // URL вашего бэкенда. ОБЯЗАТЕЛЬНО ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ ДОМЕН С HTTPS!
         const BACKEND_URL = 'https://mygameapi.ru'; 
 
-        // Инициализация Telegram Web App
+        // Глобальные переменные
+        let currentPage = 'ageGate';
+        let gameMode = 'userChoice'; // 'userChoice' или 'random'
+        let selectedCategories = [];
+        let allTasks = []; // Все задания, загруженные с бэкенда
+        let availableTasksForSession = []; // Задания, доступные для текущей сессии после фильтрации по категориям и безопасным словам
+        let playedTasksIdsInSession = []; // ID заданий, которые уже были сыграны в текущей сессии
+        let currentTask = null;
+        let premiumStatus = false; // Статус премиум-подписки
+        let premiumPrice = 100; // Стоимость премиума, будет загружена с бэкенда
+        let safeWords = []; // Слова, которые нельзя использовать в заданиях
+
+        // --- Основная функция рендеринга страниц (определена в начале) ---
+        function renderPage(pageName) {
+            const appDiv = document.getElementById('app');
+            appDiv.innerHTML = ''; // Очищаем текущий контент
+
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                window.Telegram.WebApp.MainButton.hide(); // Скрываем кнопку по умолчанию
+            }
+
+            switch (pageName) {
+                case 'ageGate':
+                    renderAgeGate();
+                    break;
+                case 'welcome':
+                    renderWelcomeScreen();
+                    break;
+                case 'gameModeSelection':
+                    renderGameModeSelection();
+                    break;
+                case 'categorySelection':
+                    renderCategorySelection();
+                    break;
+                case 'game':
+                    renderGameScreen();
+                    break;
+                case 'settings':
+                    renderSettings();
+                    break;
+                default:
+                    renderAgeGate(); // По умолчанию
+            }
+            currentPage = pageName;
+        }
+
+        // --- Инициализация Telegram Web App (перемещена после renderPage) ---
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand(); // Разворачиваем приложение на весь экран
@@ -307,20 +353,7 @@
             window.Telegram.WebApp.MainButton.show();
         }
 
-        let currentPage = 'ageGate';
-        let gameMode = 'userChoice'; // 'userChoice' или 'random'
-        let selectedCategories = [];
-        let allTasks = []; // Все задания, загруженные с бэкенда
-        let availableTasksForSession = []; // Задания, доступные для текущей сессии после фильтрации по категориям и безопасным словам
-        let playedTasksIdsInSession = []; // ID заданий, которые уже были сыграны в текущей сессии
-        let currentTask = null;
-        let premiumStatus = false; // Статус премиум-подписки
-        let premiumPrice = 100; // Стоимость премиума, будет загружена с бэкенда
-
-        let safeWords = []; // Слова, которые нельзя использовать в заданиях
-
-        // --- Вспомогательные функции для рендеринга ---
-
+        // --- Вспомогательные функции (перемещены после renderPage) ---
         // Добавляем messageBox элемент в DOM, чтобы showMessage мог работать
         function ensureMessageBoxExists() {
             if (!document.getElementById('messageBox')) {
@@ -415,7 +448,7 @@
             document.body.appendChild(modalOverlay);
         }
 
-        // --- Рендеринг страниц ---
+        // --- Функции рендеринга страниц ---
 
         function renderAgeGate() {
             const appDiv = document.getElementById('app');
@@ -910,6 +943,7 @@
 
         // --- Инициализация приложения ---
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOMContentLoaded fired. Attempting to render initial page.');
             // Убедимся, что messageBox существует
             ensureMessageBoxExists();
 
@@ -929,8 +963,10 @@
             if (ageConfirmed) {
                 // Если возраст подтвержден, сразу проверяем премиум-статус с бэкенда
                 await checkPremiumStatus(); 
+                console.log('Age confirmed, rendering welcome page.');
                 renderPage('welcome');
             } else {
+                console.log('Age not confirmed, rendering age gate page.');
                 renderPage('ageGate');
             }
         });
