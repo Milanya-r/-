@@ -30,12 +30,12 @@
             flex-direction: column;
             gap: 16px;
             text-align: center;
-            animation: fadeIn 0.5s ease-out;
+            /* animation: fadeIn 0.5s ease-out; */ /* Временно отключаем анимацию */
         }
-        @keyframes fadeIn {
+        /* @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
-        }
+        } */
         .btn {
             padding: 14px 28px; /* Немного больше padding */
             border-radius: 14px; /* Более скругленные углы */
@@ -100,12 +100,12 @@
             line-height: 1.8; /* leading-relaxed */
             font-weight: 600;
             color: #2d3748;
-            animation: slideIn 0.6s ease-out; /* Анимация для карточки */
+            /* animation: slideIn 0.6s ease-out; */ /* Временно отключаем анимацию */
         }
-        @keyframes slideIn {
+        /* @keyframes slideIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-        }
+        } */
         .category-item {
             display: flex;
             align-items: center;
@@ -140,7 +140,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeIn 0.3s ease-out;
+            /* animation: fadeIn 0.3s ease-out; */ /* Временно отключаем анимацию */
         }
         .modal-content {
             background-color: #fff;
@@ -151,12 +151,12 @@
             width: 90%;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3); /* Более выразительная тень */
             position: relative;
-            animation: zoomIn 0.3s ease-out;
+            /* animation: zoomIn 0.3s ease-out; */ /* Временно отключаем анимацию */
         }
-        @keyframes zoomIn {
+        /* @keyframes zoomIn {
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
-        }
+        } */
         .modal-close-btn {
             position: absolute;
             top: 15px;
@@ -229,7 +229,10 @@
 </head>
 <body>
     <div id="app" class="container">
-        </div>
+        <h1 class="text-3xl font-bold text-purple-700">Тестовый заголовок</h1>
+        <p class="text-gray-600">Если вы видите этот текст, то контейнер работает.</p>
+        <button class="btn btn-primary">Тестовая кнопка</button>
+    </div>
     <p id="messageBox" class="message-box hidden"></p> 
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -876,7 +879,7 @@
                     // Открываем платежный интерфейс Telegram
                     window.Telegram.WebApp.openInvoice(result.invoice_url, async (status) => {
                         if (status === 'paid') {
-                            showModal('Поздравляем! �', 'Премиум-доступ активирован! Спасибо за покупку.');
+                            showModal('Поздравляем! 🎉', 'Премиум-доступ активирован! Спасибо за покупку.');
                             // После успешной оплаты, обновим статус премиума с бэкенда
                             await checkPremiumStatus(); 
                             renderPage('categorySelection'); // Перерисовываем для обновления категорий
