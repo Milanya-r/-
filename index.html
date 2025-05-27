@@ -455,8 +455,11 @@
                 window.Telegram.WebApp.MainButton.showProgress();
             }
 
+            const fullUrl = `${BACKEND_URL}${path}`; // Добавлено логирование полного URL
+            console.log(`API Call: ${method} ${fullUrl} with data:`, data);
+
             try {
-                const response = await fetch(`${BACKEND_URL}${path}`, options);
+                const response = await fetch(fullUrl, options);
                 const result = await response.json();
                 if (!response.ok) {
                     throw new Error(result.message || `Ошибка API: ${response.status}`);
