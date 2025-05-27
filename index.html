@@ -197,11 +197,40 @@
         }
         .text-purple-700 { color: #6b46c1; } /* Добавим явный цвет для заголовков */
         .text-purple-600 { color: #805ad5; } /* Добавим явный цвет для ссылок/акцентов */
+
+        /* Styles for the persistent message box */
+        .message-box {
+            position: fixed; /* Make it fixed */
+            top: 20px; /* Position at top */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001; /* Above modals */
+            width: 90%;
+            max-width: 380px; /* Max width for readability */
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 0; /* Start hidden */
+            pointer-events: none; /* Allow clicks through when hidden */
+        }
+        .message-box:not(.hidden) {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+        .message-box.bg-red-100 { background-color: #ffebeb; }
+        .message-box.text-red-700 { color: #e53e3e; }
+        .message-box.bg-green-100 { background-color: #ebfef1; }
+        .message-box.text-green-700 { color: #38a169; }
     </style>
 </head>
 <body>
     <div id="app" class="container">
         </div>
+    <p id="messageBox" class="message-box hidden"></p> 
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -225,6 +254,7 @@
         function renderPage(pageName) {
             const appDiv = document.getElementById('app');
             appDiv.innerHTML = ''; // Очищаем текущий контент
+            console.log(`renderPage: Clearing appDiv.innerHTML for page: ${pageName}`); // Added log
 
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
                 window.Telegram.WebApp.MainButton.hide(); // Скрываем кнопку по умолчанию
@@ -253,6 +283,7 @@
                     renderAgeGate(); // По умолчанию
             }
             currentPage = pageName;
+            console.log(`renderPage: Finished rendering for page: ${pageName}`); // Added log
         }
 
         // --- Инициализация Telegram Web App (перемещена после renderPage) ---
@@ -354,26 +385,16 @@
         }
 
         // --- Вспомогательные функции (перемещены после renderPage) ---
-        // Добавляем messageBox элемент в DOM, чтобы showMessage мог работать
-        function ensureMessageBoxExists() {
-            if (!document.getElementById('messageBox')) {
-                const appDiv = document.getElementById('app');
-                if (appDiv) {
-                    const msgBox = document.createElement('p');
-                    msgBox.id = 'messageBox';
-                    msgBox.className = 'message-box hidden';
-                    appDiv.prepend(msgBox); // Добавляем в начало контейнера
-                }
-            }
-        }
-
         function showMessage(message, isError = false) {
-            ensureMessageBoxExists(); // Убедимся, что элемент существует
             const messageBox = document.getElementById('messageBox');
             if (messageBox) {
                 messageBox.textContent = message;
                 messageBox.className = `message-box ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
                 messageBox.classList.remove('hidden');
+                // Auto-hide after a few seconds
+                setTimeout(() => {
+                    messageBox.classList.add('hidden');
+                }, 5000); // Hide after 5 seconds
             } else {
                 console.log(`Message (${isError ? 'Error' : 'Info'}): ${message}`);
             }
@@ -461,6 +482,7 @@
                 </div>
                 <button id="confirmAgeBtn" class="btn btn-primary w-full opacity-50 cursor-not-allowed" disabled>Продолжить</button>
             `;
+            console.log('renderAgeGate: appDiv.innerHTML set.'); // Added log
 
             const ageConfirmCheckbox = document.getElementById('ageConfirm');
             const confirmAgeBtn = document.getElementById('confirmAgeBtn');
@@ -511,6 +533,7 @@
                 <button id="startGameBtn" class="btn btn-primary w-full">Начать новую игру</button>
                 <button id="settingsBtn" class="btn btn-secondary w-full">Настройки</button>
             `;
+            console.log('renderWelcomeScreen: appDiv.innerHTML set.'); // Added log
             document.getElementById('startGameBtn').addEventListener('click', () => renderPage('gameModeSelection'));
             document.getElementById('settingsBtn').addEventListener('click', () => renderPage('settings'));
 
@@ -533,6 +556,7 @@
                 <button id="confirmModeBtn" class="btn btn-green w-full">Продолжить</button>
                 <button id="backFromGameModeBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
+            console.log('renderGameModeSelection: appDiv.innerHTML set.'); // Added log
 
             document.getElementById('userChoiceModeBtn').addEventListener('click', () => {
                 gameMode = 'userChoice';
@@ -560,6 +584,7 @@
                 <button id="buyPremiumBtn" class="btn btn-primary w-full mt-3">Купить Премиум / ${premiumPrice} Stars</button>
                 <button id="backFromCategoryBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
+            console.log('renderCategorySelection: appDiv.innerHTML set.'); // Added log
 
             const categoriesList = document.getElementById('categoriesList');
             try {
@@ -635,6 +660,7 @@
                 </div>
                 <div id="adDisplay" class="ad-container hidden"></div>
             `;
+            console.log('renderGameScreen: appDiv.innerHTML set.'); // Added log
 
             if (gameMode === 'userChoice') {
                 document.getElementById('chooseTruthBtn').addEventListener('click', () => getNextTask('truth'));
@@ -667,6 +693,7 @@
                 </div>
                 <button id="backToWelcomeBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
+            console.log('renderSettings: appDiv.innerHTML set.'); // Added log
 
             const safeWordsInput = document.getElementById('safeWordsInput');
             safeWordsInput.value = safeWords.join(', ');
@@ -944,9 +971,6 @@
         // --- Инициализация приложения ---
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('DOMContentLoaded fired. Attempting to render initial page.');
-            // Убедимся, что messageBox существует
-            ensureMessageBoxExists();
-
             // Загружаем стоимость премиум-подписки
             await fetchPremiumPrice();
 
