@@ -542,10 +542,24 @@
                 confirmAgeBtn.classList.toggle('cursor-not-allowed', !confirmAgeBtn.disabled);
             });
 
-            confirmAgeBtn.addEventListener('click', () => {
+            confirmAgeBtn.addEventListener('click', async () => { // Добавлено async
                 if (ageConfirmCheckbox.checked) {
-                    localStorage.setItem('ageConfirmed', 'true');
-                    renderPage('welcome');
+                    const userId = window.Telegram.WebApp.initDataUnsafe.user?.id;
+                    if (userId) {
+                        try {
+                            // Отправляем подтверждение возраста на бэкенд
+                            await apiCall('POST', `/api/users/${userId}/confirm-age`, { ageConfirmed: true });
+                            console.log(`Age confirmed for user ${userId} and saved to backend.`);
+                            renderPage('welcome');
+                        } catch (error) {
+                            console.error('Error saving age confirmation to backend:', error);
+                            showModal('Ошибка', 'Не удалось сохранить подтверждение возраста. Пожалуйста, попробуйте еще раз.');
+                        }
+                    } else {
+                        console.warn('User ID not available, cannot save age confirmation to backend.');
+                        // Если ID пользователя недоступен (например, в симуляции), все равно переходим
+                        renderPage('welcome');
+                    }
                 } else {
                     showModal('Ошибка', 'Пожалуйста, подтвердите свой возраст и согласие с условиями.');
                 }
@@ -1027,10 +1041,27 @@
                 // Пока оставим на текущей странице (ageGate/welcome), чтобы пользователь мог увидеть ошибку.
             }
 
-            // Проверяем статус подтверждения возраста
-            const ageConfirmed = localStorage.getItem('ageConfirmed') === 'true';
-            if (ageConfirmed) {
-                // Если возраст подтвержден, сразу проверяем премиум-статус с бэкенда
+            // Проверяем статус подтверждения возраста через бэкенд
+            const userId = window.Telegram.WebApp.initDataUnsafe.user?.id;
+            let ageConfirmedOnBackend = false;
+            if (userId) {
+                try {
+                    const response = await apiCall('GET', `/api/users/${userId}/age-confirmed`);
+                    ageConfirmedOnBackend = response.ageConfirmed;
+                    console.log(`Age confirmed status from backend for user ${userId}: ${ageConfirmedOnBackend}`);
+                } catch (error) {
+                    console.error('Error fetching age confirmation from backend:', error);
+                    // Если не удалось получить статус с бэкенда, считаем, что не подтвержден
+                    ageConfirmedOnBackend = false;
+                }
+            } else {
+                console.warn('User ID not available, cannot check age confirmation from backend. Defaulting to age gate.');
+                // Для симуляции вне Telegram, если ID недоступен, всегда показываем ageGate
+                ageConfirmedOnBackend = false; 
+            }
+
+            if (ageConfirmedOnBackend) {
+                // Если возраст подтвержден на бэкенде, сразу проверяем премиум-статус
                 await checkPremiumStatus(); 
                 console.log('Age confirmed, rendering welcome page.');
                 renderPage('welcome');
