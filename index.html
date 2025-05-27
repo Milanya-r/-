@@ -3,130 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра для пар: Правда или Действие</title>
+    <title>Правда или Действие</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-image: linear-gradient(to right top, #f0f2f5, #e0e6eb); /* Мягкий градиент */
-            color: #333;
+            background-color: #1a1a2e; /* Темный фон */
+            color: #e0e0e0; /* Светлый текст */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow-x: hidden; /* Предотвращаем горизонтальный скролл */
+            padding: 20px;
+            box-sizing: border-box;
         }
         .container {
+            background-color: #16213e; /* Чуть светлее фон для контейнера */
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             width: 100%;
-            max-width: 420px; /* Оптимизация для мобильных устройств */
-            background-color: #fff;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15); /* Более выразительная тень */
-            padding: 24px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            max-width: 500px;
             text-align: center;
-            animation: fadeIn 0.5s ease-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            border: 1px solid #0f3460;
         }
         .btn {
-            padding: 14px 28px; /* Немного больше padding */
-            border-radius: 14px; /* Более скругленные углы */
-            font-weight: 700; /* Более жирный шрифт */
-            cursor: pointer;
-            transition: all 0.3s ease-in-out; /* Более плавный переход */
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            text-transform: uppercase; /* Заглавные буквы */
-            letter-spacing: 0.05em; /* Небольшой межбуквенный интервал */
-        }
-        .btn-primary {
-            background-image: linear-gradient(to right top, #a78bfa, #8b5cf6); /* Фиолетовый градиент */
+            background-color: #e94560; /* Яркий акцентный цвет */
             color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            cursor: pointer;
+            width: 100%;
+            display: block;
+            margin-top: 15px;
+            box-shadow: 0 4px 10px rgba(233, 69, 96, 0.4);
             border: none;
         }
-        .btn-primary:hover {
-            background-image: linear-gradient(to right top, #9773f0, #7c4ee0);
-            transform: translateY(-3px); /* Чуть больше подъем */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        .btn:hover {
+            background-color: #b8364e;
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: translateY(0);
         }
         .btn-secondary {
-            background-color: #f0f4f8; /* Мягкий серый */
-            color: #4a5568;
-            border: none;
+            background-color: #0f3460; /* Дополнительный цвет для кнопок */
+            color: white;
+            box-shadow: 0 4px 10px rgba(15, 52, 96, 0.4);
         }
         .btn-secondary:hover {
-            background-color: #e2e8f0;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            background-color: #0c2a4f;
         }
-        .btn-green {
-            background-image: linear-gradient(to right top, #68d391, #48bb78); /* Зеленый градиент */
-            color: white;
-            border: none;
+        .btn-primary {
+            background-color: #e94560;
         }
-        .btn-green:hover {
-            background-image: linear-gradient(to right top, #5bc282, #3da66b);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        .btn-primary:hover {
+            background-color: #b8364e;
         }
-        .btn-red {
-            background-image: linear-gradient(to right top, #fc8181, #e53e3e); /* Красный градиент */
-            color: white;
-            border: none;
-        }
-        .btn-red:hover {
-            background-image: linear-gradient(to right top, #f27272, #d93030);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-        .card {
-            background-color: #f7fafc;
-            border-radius: 18px; /* Более скругленные */
-            padding: 24px; /* Больше padding */
-            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.08); /* Более глубокая внутренняя тень */
-            min-height: 150px; /* Увеличим высоту */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 1.25rem; /* text-xl */
-            line-height: 1.8; /* leading-relaxed */
-            font-weight: 600;
-            color: #2d3748;
-            animation: slideIn 0.6s ease-out; /* Анимация для карточки */
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .category-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 18px; /* Больше padding */
-            background-color: #f7fafc;
-            border-radius: 14px; /* Более скругленные */
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08); /* Более выразительная тень */
-        }
-        .category-item:hover {
-            background-color: #edf2f7;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
-        }
-        .category-item.selected {
-            background-color: #e0f2fe; /* light blue for selected */
-            border: 3px solid #667eea; /* Более выразительная фиолетовая рамка */
-            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3); /* Тень под цвет рамки */
-            transform: translateY(-1px);
+        .text-gradient {
+            background: linear-gradient(45deg, #e94560, #ff7e5f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         .modal {
             position: fixed;
@@ -134,76 +76,115 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* Более темный фон */
-            backdrop-filter: blur(5px); /* Эффект размытия */
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeIn 0.3s ease-out;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
         }
         .modal-content {
-            background-color: #fff;
+            background-color: #16213e;
             padding: 30px;
-            border-radius: 25px; /* Более скругленные углы */
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
             text-align: center;
-            max-width: 400px; /* Чуть шире */
+            max-width: 400px;
             width: 90%;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3); /* Более выразительная тень */
-            position: relative;
-            animation: zoomIn 0.3s ease-out;
+            border: 1px solid #0f3460;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
         }
-        @keyframes zoomIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+        .modal.show .modal-content {
+            transform: translateY(0);
         }
-        .modal-close-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 1.8rem; /* Чуть больше */
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+        .modal-body {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .modal-actions button {
+            margin: 5px;
+        }
+        /* Стили для админ-панели удалены из index.html */
+        /* Дополнительные стили для игровых элементов */
+        .card {
+            background-color: #0f1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+        .category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background-color: #0f3460;
+            border-radius: 10px;
             cursor: pointer;
-            color: #718096;
-            transition: color 0.2s ease;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-        .modal-close-btn:hover {
-            color: #333;
+        .category-item:hover {
+            background-color: #0c2a4f;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        .category-item.selected {
+            background-color: #e94560;
+            border: 2px solid #ff7e5f;
+            box-shadow: 0 4px 10px rgba(233, 69, 96, 0.4);
+            transform: translateY(-2px);
         }
         .ad-container {
-            margin-top: 24px;
-            padding: 18px;
-            background-color: #e6fffa; /* Светло-зеленый фон для рекламы */
-            border-radius: 16px; /* Более скругленные */
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #0f3460;
+            border-radius: 10px;
             text-align: center;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
         .ad-container img, .ad-container video {
             max-width: 100%;
-            border-radius: 10px;
-            margin-top: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 10px;
         }
         .ad-container a {
             display: block;
-            margin-top: 15px;
-            font-weight: 700;
-            color: #3182ce;
+            margin-top: 10px;
+            font-weight: 600;
+            color: #ff7e5f;
             text-decoration: none;
-            transition: color 0.2s ease;
         }
         .ad-container a:hover {
             text-decoration: underline;
-            color: #2c5282;
         }
-        .text-purple-700 { color: #6b46c1; } /* Добавим явный цвет для заголовков */
-        .text-purple-600 { color: #805ad5; } /* Добавим явный цвет для ссылок/акцентов */
     </style>
 </head>
 <body>
     <div id="app" class="container">
         </div>
-
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <script>
         // URL вашего бэкенда. ОБЯЗАТЕЛЬНО ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ ДОМЕН С HTTPS!
@@ -277,6 +258,7 @@
         let playedTasksIdsInSession = []; // ID заданий, которые уже были сыграны в текущей сессии
         let currentTask = null;
         let premiumStatus = false; // Статус премиум-подписки
+        let currentPremiumPrice = 100; // Дефолтное значение, будет обновлено с бэкенда
 
         let safeWords = []; // Слова, которые нельзя использовать в заданиях
 
@@ -330,12 +312,12 @@
             modalContent.appendChild(closeBtn);
 
             const modalTitle = document.createElement('h3');
-            modalTitle.className = 'text-2xl font-bold mb-4 text-purple-700'; /* Улучшенный заголовок */
+            modalTitle.className = 'text-2xl font-bold mb-4 text-gradient'; /* Улучшенный заголовок */
             modalTitle.textContent = title;
             modalContent.appendChild(modalTitle);
 
             const modalMessage = document.createElement('p');
-            modalMessage.className = 'text-gray-700 mb-6 text-lg'; /* Крупнее текст */
+            modalMessage.className = 'text-gray-300 mb-6 text-lg'; /* Крупнее текст */
             modalMessage.innerHTML = message;
             modalContent.appendChild(modalMessage);
 
@@ -343,8 +325,8 @@
             buttonContainer.className = 'flex flex-col gap-3';
             buttons.forEach(btnInfo => {
                 const button = document.createElement('button');
-                button.className = `btn ${btnInfo.className || 'btn-secondary'} w-full`;
                 button.textContent = btnInfo.text;
+                button.className = `btn ${btnInfo.className || 'btn-secondary'} w-full`;
                 button.onclick = () => {
                     modalOverlay.remove();
                     if (btnInfo.handler) btnInfo.handler();
@@ -362,11 +344,11 @@
         function renderAgeGate() {
             const appDiv = document.getElementById('app');
             appDiv.innerHTML = `
-                <h2 class="text-2xl font-bold mb-4 text-purple-700">Добро пожаловать в "Правда или Действие" для пар!</h2>
-                <p class="text-gray-600 mb-6">Это приложение содержит контент 18+. Пожалуйста, подтвердите, что вам исполнилось 18 лет.</p>
+                <h2 class="text-2xl font-bold mb-4 text-gradient">Добро пожаловать в "Правда или Действие" для пар!</h2>
+                <p class="text-gray-300 mb-6">Это приложение содержит контент 18+. Пожалуйста, подтвердите, что вам исполнилось 18 лет.</p>
                 <div class="flex items-center mb-6">
                     <input type="checkbox" id="ageConfirm" class="form-checkbox h-5 w-5 text-purple-600 rounded-md">
-                    <label for="ageConfirm" class="ml-2 text-gray-700 text-sm">Я подтверждаю, что мне 18 лет или более, и я согласен(на) с <a href="#" id="termsLink" class="text-purple-600 hover:underline">Условиями использования</a> и <a href="#" id="privacyLink" class="text-purple-600 hover:underline">Политикой конфиденциальности</a>.</label>
+                    <label for="ageConfirm" class="ml-2 text-gray-300 text-sm">Я подтверждаю, что мне 18 лет или более, и я согласен(на) с <a href="#" id="termsLink" class="text-purple-400 hover:underline">Условиями использования</a> и <a href="#" id="privacyLink" class="text-purple-400 hover:underline">Политикой конфиденциальности</a>.</label>
                 </div>
                 <button id="confirmAgeBtn" class="btn btn-primary w-full opacity-50 cursor-not-allowed" disabled>Продолжить</button>
             `;
@@ -415,8 +397,8 @@
         function renderWelcomeScreen() {
             const appDiv = document.getElementById('app');
             appDiv.innerHTML = `
-                <h2 class="text-3xl font-bold mb-4 text-purple-700">Привет! ✨</h2>
-                <p class="text-gray-600 mb-6 text-lg">Добро пожаловать в "Правда или Действие" – идеальную игру для сближения с партнёром.</p>
+                <h2 class="text-3xl font-bold mb-4 text-gradient">Привет! ✨</h2>
+                <p class="text-gray-300 mb-6 text-lg">Добро пожаловать в "Правда или Действие" – идеальную игру для сближения с партнёром.</p>
                 <button id="startGameBtn" class="btn btn-primary w-full">Начать новую игру</button>
                 <button id="settingsBtn" class="btn btn-secondary w-full">Настройки</button>
             `;
@@ -431,15 +413,15 @@
         function renderGameModeSelection() {
             const appDiv = document.getElementById('app');
             appDiv.innerHTML = `
-                <h2 class="text-2xl font-bold mb-4 text-purple-700">Выберите режим игры</h2>
-                <p class="text-gray-600 mb-6">Как вы хотите играть?</p>
+                <h2 class="text-2xl font-bold mb-4 text-gradient">Выберите режим игры</h2>
+                <p class="text-gray-300 mb-6">Как вы хотите играть?</p>
                 <button id="userChoiceModeBtn" class="btn ${gameMode === 'userChoice' ? 'btn-primary' : 'btn-secondary'} w-full mb-3">
                     Наш Выбор (Вы сами выбираете "Правду" или "Действие")
                 </button>
                 <button id="randomModeBtn" class="btn ${gameMode === 'random' ? 'btn-primary' : 'btn-secondary'} w-full mb-6">
                     Сюрприз (Приложение выбирает случайным образом)
                 </button>
-                <button id="confirmModeBtn" class="btn btn-green w-full">Продолжить</button>
+                <button id="confirmModeBtn" class="btn btn-primary w-full">Продолжить</button>
                 <button id="backFromGameModeBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
 
@@ -458,19 +440,22 @@
         async function renderCategorySelection() {
             // Перед рендерингом категорий, обновим премиум-статус
             await checkPremiumStatus(); 
+            await fetchPremiumPriceForUser(); // Обновляем цену для отображения на кнопке
 
             const appDiv = document.getElementById('app');
             appDiv.innerHTML = `
-                <h2 class="text-2xl font-bold mb-4 text-purple-700">Выберите категории заданий</h2>
-                <p class="text-gray-600 mb-6">Выберите те, что вам по душе. Платные категории доступны после покупки.</p>
+                <h2 class="text-2xl font-bold mb-4 text-gradient">Выберите категории заданий</h2>
+                <p class="text-gray-300 mb-6">Выберите те, что вам по душе. Платные категории доступны после покупки.</p>
                 <div id="categoriesList" class="flex flex-col gap-3 mb-6">
                     </div>
-                <button id="startGameFromCategoriesBtn" class="btn btn-green w-full">Начать игру</button>
-                <button id="buyPremiumBtn" class="btn btn-primary w-full mt-3">Купить Премиум / Stars</button>
+                <button id="startGameFromCategoriesBtn" class="btn btn-primary w-full">Начать игру</button>
+                <button id="buyPremiumBtn" class="btn btn-secondary w-full mt-3">Купить Премиум / ${currentPremiumPrice} Stars</button>
                 <button id="backFromCategoryBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
 
             const categoriesList = document.getElementById('categoriesList');
+            const buyPremiumBtn = document.getElementById('buyPremiumBtn'); // Получаем ссылку на кнопку здесь
+
             try {
                 const response = await fetch(`${BACKEND_URL}/api/categories`);
                 if (!response.ok) { // Проверяем статус ответа
@@ -487,10 +472,10 @@
                     categoryItem.className = `category-item ${isSelected ? 'selected' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`;
                     categoryItem.innerHTML = `
                         <div class="text-left">
-                            <p class="font-semibold text-gray-800">${cat.name} ${isPaid ? '<span class="text-yellow-600 text-sm font-bold">🌟 Премиум</span>' : ''}</p>
-                            <p class="text-sm text-gray-500">${cat.description}</p>
+                            <p class="font-semibold text-white">${cat.name} ${isPaid ? '<span class="text-yellow-400 text-sm font-bold">🌟 Премиум</span>' : ''}</p>
+                            <p class="text-sm text-gray-400">${cat.description}</p>
                         </div>
-                        ${isDisabled ? '<span class="text-red-500 text-xl">🔒</span>' : '<input type="checkbox" class="form-checkbox h-5 w-5 text-purple-600 rounded-md" ' + (isSelected ? 'checked' : '') + '>'}
+                        ${isDisabled ? '<span class="text-red-400 text-xl">🔒</span>' : '<input type="checkbox" class="form-checkbox h-5 w-5 text-purple-400 rounded-md" ' + (isSelected ? 'checked' : '') + '>'}
                     `;
                     if (!isDisabled) {
                         categoryItem.addEventListener('click', () => {
@@ -501,6 +486,9 @@
                             }
                             renderCategorySelection(); // Перерисовываем для обновления стилей
                         });
+                    } else {
+                        // Если категория заблокирована, при клике показываем модальное окно покупки
+                        categoryItem.addEventListener('click', showPremiumPurchase);
                     }
                     categoriesList.appendChild(categoryItem);
                 });
@@ -513,16 +501,28 @@
                 if (!document.getElementById('categoryLoadError')) {
                     const errorDiv = document.createElement('div');
                     errorDiv.id = 'categoryLoadError';
-                    errorDiv.className = 'text-red-500 text-center mb-4';
+                    errorDiv.className = 'text-red-400 text-center mb-4';
                     errorDiv.textContent = 'Не удалось загрузить категории. Пожалуйста, убедитесь, что бэкенд запущен и доступен.';
                     categoriesList.before(errorDiv); // Вставляем перед списком категорий
                 }
             }
 
-
             document.getElementById('startGameFromCategoriesBtn').addEventListener('click', startGame);
-            document.getElementById('buyPremiumBtn').addEventListener('click', showPremiumPurchase);
+            buyPremiumBtn.addEventListener('click', showPremiumPurchase); // Используем полученную ссылку
             document.getElementById('backFromCategoryBtn').addEventListener('click', () => renderPage('gameModeSelection'));
+
+            // Обновляем текст кнопки "Купить Премиум" в зависимости от статуса
+            if (premiumStatus) {
+                buyPremiumBtn.textContent = 'Премиум-доступ активен!';
+                buyPremiumBtn.disabled = true;
+                buyPremiumBtn.classList.remove('btn-primary');
+                buyPremiumBtn.classList.add('btn-secondary');
+            } else {
+                buyPremiumBtn.textContent = `Купить Премиум / ${currentPremiumPrice} Stars`;
+                buyPremiumBtn.disabled = false;
+                buyPremiumBtn.classList.remove('btn-secondary');
+                buyPremiumBtn.classList.add('btn-primary');
+            }
 
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
                 window.Telegram.WebApp.MainButton.hide();
@@ -532,7 +532,7 @@
         function renderGameScreen() {
             const appDiv = document.getElementById('app');
             appDiv.innerHTML = `
-                <h2 class="text-2xl font-bold mb-4 text-purple-700">Ваше задание:</h2>
+                <h2 class="text-2xl font-bold mb-4 text-gradient">Ваше задание:</h2>
                 <div id="taskCard" class="card mb-6">Нажмите "Следующее задание"</div>
                 <div id="gameControls" class="flex flex-col gap-3">
                     ${gameMode === 'userChoice' ? `
@@ -541,7 +541,7 @@
                             <button id="chooseDareBtn" class="btn btn-primary w-1/2">Действие</button>
                         </div>
                     ` : ''}
-                    <button id="nextTaskBtn" class="btn btn-green w-full">Следующее задание</button>
+                    <button id="nextTaskBtn" class="btn btn-primary w-full">Следующее задание</button>
                     <button id="skipTaskBtn" class="btn btn-secondary w-full">Пропустить</button>
                     <button id="backToCategoriesBtn" class="btn btn-secondary w-full mt-4">Сменить категории</button>
                 </div>
@@ -569,13 +569,13 @@
             safeWords = storedSafeWords ? JSON.parse(storedSafeWords) : [];
 
             appDiv.innerHTML = `
-                <h2 class="text-2xl font-bold mb-4 text-purple-700">Настройки</h2>
+                <h2 class="text-2xl font-bold mb-4 text-gradient">Настройки</h2>
                 <div class="mb-6 text-left">
-                    <h3 class="text-xl font-semibold mb-3">Безопасные слова / Границы комфорта</h3>
-                    <p class="text-gray-600 mb-2">Введите слова или фразы, которые не должны появляться в заданиях (например, "еда", "публично", "БДСМ"). Разделяйте запятыми.</p>
-                    <input type="text" id="safeWordsInput" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Например: еда, публично">
+                    <h3 class="text-xl font-semibold mb-3 text-white">Безопасные слова / Границы комфорта</h3>
+                    <p class="text-gray-300 mb-2">Введите слова или фразы, которые не должны появляться в заданиях (например, "еда", "публично", "БДСМ"). Разделяйте запятыми.</p>
+                    <input type="text" id="safeWordsInput" class="w-full p-3 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-800 text-white" placeholder="Например: еда, публично">
                     <button id="saveSafeWordsBtn" class="btn btn-primary w-full mt-3">Сохранить безопасные слова</button>
-                    <p class="text-sm text-gray-500 mt-2">Текущие безопасные слова: <span id="currentSafeWords">${safeWords.join(', ') || 'Нет'}</span></p>
+                    <p class="text-sm text-gray-400 mt-2">Текущие безопасные слова: <span id="currentSafeWords">${safeWords.join(', ') || 'Нет'}</span></p>
                 </div>
                 <button id="backToWelcomeBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
@@ -609,10 +609,7 @@
                 const { tasks: fetchedTasks } = await tasksResponse.json();
                 allTasks = fetchedTasks; // Сохраняем все задания
 
-                const categoriesResponse = await fetch(`${BACKEND_URL}/api/categories`);
-                const { categories: fetchedCategories } = await categoriesResponse.json();
-                // SIMULATED_CATEGORIES = fetchedCategories; // Обновляем категории, если они динамические
-
+                // Категории будут загружены в renderCategorySelection
                 return true;
 
             } catch (error) {
@@ -626,6 +623,28 @@
                 }
             }
         }
+
+        // Функция для получения текущей стоимости премиума (для отображения пользователю)
+        async function fetchPremiumPriceForUser() {
+            try {
+                // Используем админский эндпоинт для получения цены, так как он уже есть
+                const response = await fetch(`${BACKEND_URL}/api/admin/settings/premium-price`);
+                const data = await response.json();
+                if (response.ok) {
+                    currentPremiumPrice = parseInt(data.premiumPrice);
+                    console.log('Текущая стоимость премиума для пользователя:', currentPremiumPrice);
+                } else {
+                    console.error('Ошибка при получении стоимости премиума для пользователя:', data.message);
+                    // Устанавливаем дефолтное значение, если не удалось получить с бэкенда
+                    currentPremiumPrice = 100;
+                }
+            } catch (error) {
+                console.error('Ошибка сети при получении стоимости премиума для пользователя:', error);
+                // Устанавливаем дефолтное значение при ошибке сети
+                currentPremiumPrice = 100;
+            }
+        }
+
 
         // Новая функция для проверки премиум-статуса пользователя
         async function checkPremiumStatus() {
@@ -671,6 +690,8 @@
             });
 
             // Фильтрация по безопасным словам
+            const storedSafeWords = localStorage.getItem('safeWords');
+            safeWords = storedSafeWords ? JSON.parse(storedSafeWords) : [];
             availableTasksForSession = availableTasksForSession.filter(task => {
                 const taskText = task.text.toLowerCase();
                 return !safeWords.some(word => taskText.includes(word));
@@ -684,6 +705,7 @@
 
             playedTasksIdsInSession = []; // Сбрасываем сыгранные задания для новой сессии
             renderPage('game');
+            getNextTask(gameMode === 'random' ? null : 'truth'); // Начинаем с первого задания, по умолчанию "Правда" если режим "Наш Выбор"
         }
 
         function getNextTask(type = null) {
@@ -697,7 +719,10 @@
             }
 
             if (filteredTasks.length === 0) {
-                showModal('Конец раунда', 'Вы выполнили все доступные задания в выбранных категориях! Начните новую игру или смените категории.');
+                showModal('Конец раунда', 'Вы выполнили все доступные задания в выбранных категориях! Начните новую игру или смените категории.', [
+                    { text: 'Начать новую игру', className: 'btn-primary', handler: () => renderPage('gameModeSelection') },
+                    { text: 'Сменить категории', className: 'btn-secondary', handler: () => renderPage('categorySelection') }
+                ]);
                 playedTasksIdsInSession = []; // Сброс для возможности начать заново
                 taskCard.textContent = 'Нажмите "Следующее задание"';
                 currentTask = null;
@@ -707,7 +732,7 @@
             const randomIndex = Math.floor(Math.random() * filteredTasks.length);
             currentTask = filteredTasks[randomIndex];
 
-            taskCard.innerHTML = `<span class="font-bold text-purple-700">${currentTask.type === 'truth' ? 'Правда:' : 'Действие:'}</span> ${currentTask.text}`;
+            taskCard.innerHTML = `<span class="font-bold text-gradient">${currentTask.type === 'truth' ? 'Правда:' : 'Действие:'}</span> ${currentTask.text}`;
             playedTasksIdsInSession.push(currentTask.id);
 
             // Отправка аналитики о выполненном задании (симуляция)
@@ -731,15 +756,6 @@
             ]);
         }
 
-        function showPremiumPurchase() {
-            showModal('Премиум-доступ', `
-                <p class="mb-3">Разблокируйте все категории заданий и дополнительные функции, купив премиум-доступ!</p>
-                <p class="font-bold mt-4 text-xl">Стоимость: 100 Stars (на 1 месяц)</p>
-            `, [
-                { text: 'Купить за 100 Stars', className: 'btn-primary', handler: initiateTelegramStarsPurchase }
-            ]);
-        }
-
         // Новая функция для инициирования покупки через Telegram Stars
         async function initiateTelegramStarsPurchase() {
             if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initDataUnsafe.user?.id) {
@@ -748,7 +764,6 @@
             }
 
             const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
-            const amount = 100; // Стоимость премиума в Stars
             const item = 'premium_access';
 
             try {
@@ -756,7 +771,7 @@
                 const response = await fetch(`${BACKEND_URL}/api/purchase/initiate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId, amount, item })
+                    body: JSON.stringify({ userId, item }) // amount берется с бэкенда
                 });
                 const result = await response.json();
 
@@ -771,18 +786,14 @@
                             sendAnalytics({
                                 event: 'premium_purchased_stars',
                                 userId: userId,
-                                amount: amount
+                                amount: currentPremiumPrice // Используем текущую цену
                             });
                         } else if (status === 'cancelled') {
                             // Улучшенное сообщение для отмены
                             showModal('Покупка отменена', 'Вы отменили покупку премиум-доступа. Вы всегда можете вернуться и приобрести его позже!');
-                            // Не перерисовываем страницу, чтобы избежать ошибки "Не удалось загрузить категории",
-                            // если она была вызвана временной проблемой с бэкендом.
-                            // Пользователь останется на текущей странице выбора категорий.
                         } else if (status === 'failed') {
                             // Улучшенное сообщение для ошибки
                             showModal('Ошибка покупки', 'Произошла ошибка при обработке платежа. Пожалуйста, попробуйте еще раз или свяжитесь с поддержкой.');
-                            // Аналогично, не перерисовываем.
                         } else {
                             showModal('Статус покупки', `Статус: ${status}.`);
                         }
@@ -834,7 +845,7 @@
                         }
 
                         adDisplayDiv.innerHTML = `
-                            <p class="text-sm text-gray-500 mb-2">Реклама</p>
+                            <p class="text-sm text-gray-400 mb-2">Реклама</p>
                             ${mediaHtml}
                             <a href="${adData.link}" target="_blank" class="btn btn-secondary mt-3">
                                 ${adData.text || 'Подробнее'}
