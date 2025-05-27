@@ -437,6 +437,13 @@
 
         async function initiatePremiumPurchase() {
             hideMessage();
+            // Проверяем наличие Telegram WebApp API
+            if (!window.Telegram || !window.Telegram.WebApp) {
+                showMessage('Функция покупки премиум-доступа доступна только при запуске приложения внутри Telegram.', true);
+                console.warn('Telegram WebApp API не доступен. Покупка невозможна.');
+                return; // Прерываем выполнение функции
+            }
+
             if (!telegramUserId) {
                 showMessage('Не удалось определить ID пользователя Telegram. Пожалуйста, попробуйте перезапустить Mini App.', true);
                 return;
@@ -544,9 +551,9 @@
                     }
                 });
             } else {
-                console.warn('Telegram WebApp API не доступен. Некоторые функции могут быть ограничены.');
+                console.warn('Telegram WebApp API не доступен. Некоторые функции могут быть ограничены. Для полного тестирования откройте приложение в Telegram.');
                 // Для тестирования без Telegram WebApp, можно задать фейковый ID
-                telegramUserId = 'test_user_123';
+                telegramUserId = 'test_user_123'; // Используем фейковый ID для тестирования без Telegram
             }
 
             // Загружаем стоимость премиум-подписки
