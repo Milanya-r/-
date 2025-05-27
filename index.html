@@ -30,12 +30,12 @@
             flex-direction: column;
             gap: 16px;
             text-align: center;
-            /* animation: fadeIn 0.5s ease-out; */ /* Временно отключаем анимацию */
+            animation: fadeIn 0.5s ease-out; /* Анимация включена */
         }
-        /* @keyframes fadeIn {
+        @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
-        } */
+        }
         .btn {
             padding: 14px 28px; /* Немного больше padding */
             border-radius: 14px; /* Более скругленные углы */
@@ -100,12 +100,12 @@
             line-height: 1.8; /* leading-relaxed */
             font-weight: 600;
             color: #2d3748;
-            /* animation: slideIn 0.6s ease-out; */ /* Временно отключаем анимацию */
+            animation: slideIn 0.6s ease-out; /* Анимация включена */
         }
-        /* @keyframes slideIn {
+        @keyframes slideIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-        } */
+        }
         .category-item {
             display: flex;
             align-items: center;
@@ -140,7 +140,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            /* animation: fadeIn 0.3s ease-out; */ /* Временно отключаем анимацию */
+            animation: fadeIn 0.3s ease-out; /* Анимация включена */
         }
         .modal-content {
             background-color: #fff;
@@ -151,12 +151,12 @@
             width: 90%;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3); /* Более выразительная тень */
             position: relative;
-            /* animation: zoomIn 0.3s ease-out; */ /* Временно отключаем анимацию */
+            animation: zoomIn 0.3s ease-out; /* Анимация включена */
         }
-        /* @keyframes zoomIn {
+        @keyframes zoomIn {
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
-        } */
+        }
         .modal-close-btn {
             position: absolute;
             top: 15px;
@@ -229,10 +229,7 @@
 </head>
 <body>
     <div id="app" class="container">
-        <h1 class="text-3xl font-bold text-purple-700">Тестовый заголовок</h1>
-        <p class="text-gray-600">Если вы видите этот текст, то контейнер работает.</p>
-        <button class="btn btn-primary">Тестовая кнопка</button>
-    </div>
+        </div>
     <p id="messageBox" class="message-box hidden"></p> 
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -252,15 +249,33 @@
         let premiumStatus = false; // Статус премиум-подписки
         let premiumPrice = 100; // Стоимость премиума, будет загружена с бэкенда
         let safeWords = []; // Слова, которые нельзя использовать в заданиях
+        let pageHistory = []; // История страниц для кнопки "Назад" Telegram
 
         // --- Основная функция рендеринга страниц (определена в начале) ---
-        function renderPage(pageName) {
+        function renderPage(pageName, pushToHistory = true) {
             const appDiv = document.getElementById('app');
             appDiv.innerHTML = ''; // Очищаем текущий контент
-            console.log(`renderPage: Clearing appDiv.innerHTML for page: ${pageName}`); // Added log
+            console.log(`renderPage: Clearing appDiv.innerHTML for page: ${pageName}`);
 
+            // Управление кнопкой "Назад" Telegram
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.BackButton) {
+                if (pushToHistory && currentPage !== pageName) { // Избегаем дублирования при первой загрузке или ререндере текущей страницы
+                    if (currentPage && currentPage !== 'ageGate') { // Не добавляем ageGate в историю
+                        pageHistory.push(currentPage);
+                        console.log('Page added to history:', currentPage, 'History:', pageHistory);
+                    }
+                }
+                
+                if (pageHistory.length > 0) {
+                    window.Telegram.WebApp.BackButton.show();
+                } else {
+                    window.Telegram.WebApp.BackButton.hide();
+                }
+            }
+
+            // Скрываем MainButton по умолчанию, если не используется на этой странице
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
-                window.Telegram.WebApp.MainButton.hide(); // Скрываем кнопку по умолчанию
+                window.Telegram.WebApp.MainButton.hide(); 
             }
 
             switch (pageName) {
@@ -286,25 +301,35 @@
                     renderAgeGate(); // По умолчанию
             }
             currentPage = pageName;
-            console.log(`renderPage: Finished rendering for page: ${pageName}`); // Added log
+            console.log(`renderPage: Finished rendering for page: ${pageName}. Current page: ${currentPage}`);
         }
 
-        // --- Инициализация Telegram Web App (перемещена после renderPage) ---
+        // --- Инициализация Telegram Web App ---
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand(); // Разворачиваем приложение на весь экран
             window.Telegram.WebApp.MainButton.setText('Начать игру');
             window.Telegram.WebApp.MainButton.onClick(handleMainButtonClick);
             window.Telegram.WebApp.onEvent('themeChanged', () => {
-                // Обработка изменения темы Telegram (светлая/темная)
-                // Можно обновить стили, если они зависят от темы
                 console.log('Тема Telegram изменена:', window.Telegram.WebApp.themeParams);
             });
             window.Telegram.WebApp.onEvent('viewportChanged', () => {
-                // Обработка изменения размеров вьюпорта
                 console.log('Размер вьюпорта изменен:', window.Telegram.WebApp.viewportHeight, window.Telegram.WebApp.viewportStableHeight);
             });
             window.Telegram.WebApp.MainButton.show(); // Показываем главную кнопку Telegram
+
+            // Обработчик кнопки "Назад" Telegram
+            window.Telegram.WebApp.BackButton.onClick(() => {
+                if (pageHistory.length > 0) {
+                    const previousPage = pageHistory.pop();
+                    console.log('Back button clicked. Going to previous page:', previousPage, 'History:', pageHistory);
+                    renderPage(previousPage, false); // Не добавляем в историю при возврате
+                } else {
+                    console.log('Back button clicked on first page, closing app.');
+                    window.Telegram.WebApp.close(); // Если истории нет, закрываем Mini App
+                }
+            });
+
         } else {
             console.warn('Telegram Web App SDK не инициализирован. Возможно, приложение запущено вне Telegram.');
             // Для тестирования вне Telegram можно эмулировать некоторые функции
@@ -331,7 +356,6 @@
                         },
                         showProgress: () => console.log('MainButton Show Progress (Simulated)'),
                         hideProgress: () => console.log('MainButton Hide Progress (Simulated)'),
-                        // Добавляем отсутствующие свойства, чтобы избежать ошибок
                         setParams: (params) => console.log('MainButton Set Params (Simulated):', params),
                         isActive: true,
                         isVisible: true,
@@ -374,7 +398,17 @@
                         isVisible: false,
                         show: () => console.log('Simulated BackButton Show'),
                         hide: () => console.log('Simulated BackButton Hide'),
-                        onClick: (cb) => console.log('Simulated BackButton onClick'),
+                        onClick: (cb) => {
+                            console.log('Simulated BackButton onClick');
+                            // Симуляция возврата
+                            if (pageHistory.length > 0) {
+                                const previousPage = pageHistory.pop();
+                                console.log('Simulated Back button clicked. Going to previous page:', previousPage, 'History:', pageHistory);
+                                renderPage(previousPage, false);
+                            } else {
+                                console.log('Simulated Back button clicked on first page. No action.');
+                            }
+                        },
                     },
                     setHeaderColor: (color) => console.log('Simulated setHeaderColor:', color),
                     setBackgroundColor: (color) => console.log('Simulated setBackgroundColor:', color),
@@ -387,7 +421,7 @@
             window.Telegram.WebApp.MainButton.show();
         }
 
-        // --- Вспомогательные функции (перемещены после renderPage) ---
+        // --- Вспомогательные функции ---
         function showMessage(message, isError = false) {
             const messageBox = document.getElementById('messageBox');
             if (messageBox) {
@@ -416,6 +450,11 @@
             const options = { method, headers };
             if (data) options.body = JSON.stringify(data);
 
+            // Показываем прогресс MainButton при начале API-запроса
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                window.Telegram.WebApp.MainButton.showProgress();
+            }
+
             try {
                 const response = await fetch(`${BACKEND_URL}${path}`, options);
                 const result = await response.json();
@@ -427,6 +466,11 @@
                 console.error('API Call Error:', error);
                 showMessage(`Ошибка связи с сервером: ${error.message}. Пожалуйста, попробуйте позже.`, true);
                 throw error;
+            } finally {
+                // Скрываем прогресс MainButton после завершения API-запроса
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+                    window.Telegram.WebApp.MainButton.hideProgress();
+                }
             }
         }
 
@@ -485,7 +529,7 @@
                 </div>
                 <button id="confirmAgeBtn" class="btn btn-primary w-full opacity-50 cursor-not-allowed" disabled>Продолжить</button>
             `;
-            console.log('renderAgeGate: appDiv.innerHTML set.'); // Added log
+            console.log('renderAgeGate: appDiv.innerHTML set.');
 
             const ageConfirmCheckbox = document.getElementById('ageConfirm');
             const confirmAgeBtn = document.getElementById('confirmAgeBtn');
@@ -533,10 +577,14 @@
             appDiv.innerHTML = `
                 <h2 class="text-3xl font-bold mb-4 text-purple-700">Привет! ✨</h2>
                 <p class="text-gray-600 mb-6 text-lg">Добро пожаловать в "Правда или Действие" – идеальную игру для сближения с партнёром.</p>
+                ${premiumStatus ? 
+                    '<p class="text-green-600 font-semibold mb-4">✅ У вас активен Премиум-доступ!</p>' : 
+                    '<p class="text-yellow-600 font-semibold mb-4">У вас нет Премиум-доступа. <br> Купите, чтобы разблокировать все категории!</p>'
+                }
                 <button id="startGameBtn" class="btn btn-primary w-full">Начать новую игру</button>
                 <button id="settingsBtn" class="btn btn-secondary w-full">Настройки</button>
             `;
-            console.log('renderWelcomeScreen: appDiv.innerHTML set.'); // Added log
+            console.log('renderWelcomeScreen: appDiv.innerHTML set.');
             document.getElementById('startGameBtn').addEventListener('click', () => renderPage('gameModeSelection'));
             document.getElementById('settingsBtn').addEventListener('click', () => renderPage('settings'));
 
@@ -559,7 +607,7 @@
                 <button id="confirmModeBtn" class="btn btn-green w-full">Продолжить</button>
                 <button id="backFromGameModeBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
-            console.log('renderGameModeSelection: appDiv.innerHTML set.'); // Added log
+            console.log('renderGameModeSelection: appDiv.innerHTML set.');
 
             document.getElementById('userChoiceModeBtn').addEventListener('click', () => {
                 gameMode = 'userChoice';
@@ -587,7 +635,7 @@
                 <button id="buyPremiumBtn" class="btn btn-primary w-full mt-3">Купить Премиум / ${premiumPrice} Stars</button>
                 <button id="backFromCategoryBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
-            console.log('renderCategorySelection: appDiv.innerHTML set.'); // Added log
+            console.log('renderCategorySelection: appDiv.innerHTML set.');
 
             const categoriesList = document.getElementById('categoriesList');
             try {
@@ -663,7 +711,7 @@
                 </div>
                 <div id="adDisplay" class="ad-container hidden"></div>
             `;
-            console.log('renderGameScreen: appDiv.innerHTML set.'); // Added log
+            console.log('renderGameScreen: appDiv.innerHTML set.');
 
             if (gameMode === 'userChoice') {
                 document.getElementById('chooseTruthBtn').addEventListener('click', () => getNextTask('truth'));
@@ -696,7 +744,7 @@
                 </div>
                 <button id="backToWelcomeBtn" class="btn btn-secondary w-full mt-4">Назад</button>
             `;
-            console.log('renderSettings: appDiv.innerHTML set.'); // Added log
+            console.log('renderSettings: appDiv.innerHTML set.');
 
             const safeWordsInput = document.getElementById('safeWordsInput');
             safeWordsInput.value = safeWords.join(', ');
@@ -719,9 +767,7 @@
         // --- Логика игры ---
 
         async function fetchTasksAndCategories() {
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
-                window.Telegram.WebApp.MainButton.showProgress();
-            }
+            // MainButton progress is handled in apiCall now
             try {
                 const tasksResponse = await apiCall('GET', '/api/tasks'); // Используем apiCall
                 allTasks = tasksResponse.tasks; // Сохраняем все задания
@@ -733,13 +779,8 @@
 
             } catch (error) {
                 console.error('Ошибка загрузки заданий или категорий:', error);
-                // Это сообщение будет показано только если бэкенд действительно недоступен
                 showModal('Ошибка', 'Не удалось загрузить данные. Пожалуйста, убедитесь, что бэкенд запущен.');
                 return false;
-            } finally {
-                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
-                    window.Telegram.WebApp.MainButton.hideProgress();
-                }
             }
         }
 
@@ -766,6 +807,7 @@
         }
 
         async function fetchPremiumPrice() {
+            // MainButton progress is handled in apiCall now
             try {
                 const result = await apiCall('GET', '/api/admin/settings/premium-price'); // Используем apiCall
                 premiumPrice = result.premiumPrice;
@@ -873,7 +915,7 @@
 
             try {
                 // Запрос на бэкенд для создания invoice link
-                const result = await apiCall('POST', '/api/purchase/initiate', { userId, amount, item }); // Используем apiCall
+                const result = await apiCall('POST', '/api/purchase/initiate', { userId, amount, item }); 
                 
                 if (result.invoice_url) {
                     // Открываем платежный интерфейс Telegram
@@ -909,7 +951,7 @@
 
         async function sendAnalytics(data) {
             try {
-                await apiCall('POST', '/api/analytics', data); // Используем apiCall
+                await apiCall('POST', '/api/analytics', data); 
                 console.log('Аналитика отправлена:', data);
             } catch (error) {
                 console.error('Ошибка отправки аналитики:', error);
@@ -930,7 +972,7 @@
 
             if (adCounter % AD_INTERVAL === 0) {
                 try {
-                    const adData = await apiCall('GET', '/api/ads/current'); // Используем apiCall
+                    const adData = await apiCall('GET', '/api/ads/current'); 
                     let mediaHtml = '';
                     if (adData.type === 'image') {
                         mediaHtml = `<img src="${adData.url}" alt="Реклама" class="w-full h-auto object-cover">`;
