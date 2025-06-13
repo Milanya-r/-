@@ -826,7 +826,7 @@
         async function fetchPremiumPrice() {
             // MainButton progress is handled in apiCall now
             try {
-                const result = await apiCall('GET', '/api/admin/settings/premium-price'); // Используем apiCall
+                const result = await apiCall('GET', '/api/settings/premium-price'); // Используем публичный эндпоинт
                 premiumPrice = result.premiumPrice;
                 console.log('Стоимость премиум-подписки загружена:', premiumPrice);
             } catch (error) {
